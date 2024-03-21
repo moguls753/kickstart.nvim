@@ -1,3 +1,10 @@
+This is my WIP nvim config started with kickstart.nvim from tjdevries.
+
+
+# Original Readme:
+
+---
+
 # kickstart.nvim
 
 ## Introduction
