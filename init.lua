@@ -737,6 +737,8 @@ require('lazy').setup {
   -- Highlight hex colorscodes
   { 'norcalli/nvim-colorizer.lua' },
 
+  { 'folke/zen-mode.nvim' },
+
   -- Highlight todo, notes, etc in comments
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
 
