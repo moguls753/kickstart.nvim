@@ -623,12 +623,15 @@ require('lazy').setup {
       luasnip.config.setup {}
 
       cmp.setup {
+        window = {
+          completion = cmp.config.window.bordered(),
+          documentation = cmp.config.window.bordered(),
+        },
         snippet = {
           expand = function(args)
             luasnip.lsp_expand(args.body)
           end,
         },
-        completion = { completeopt = 'menu,menuone,noinsert' },
 
         -- For an understanding of why these mappings were
         -- chosen, you will need to read `:help ins-completion`
@@ -754,7 +757,7 @@ require('lazy').setup {
     event = 'InsertEnter',
     config = function()
       require('copilot').setup {
-        copilot_node_command = '/home/local/PDC01/era/.asdf/installs/nodejs/21.7.1/bin/node',
+        copilot_node_command = 'node',
         suggestion = { enabled = false },
         panel = { enabled = false },
       }
@@ -785,8 +788,12 @@ require('lazy').setup {
 
   { 'folke/tokyonight.nvim', priority = 1000 },
 
-  -- Highlight hex colorscodes
-  { 'norcalli/nvim-colorizer.lua' },
+  { -- Highlight hex colorscodes
+    'norcalli/nvim-colorizer.lua',
+    config = function()
+      require('colorizer').setup()
+    end,
+  },
 
   -- Highlight todo, notes, etc in comments
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
