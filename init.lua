@@ -475,6 +475,7 @@ require('lazy').setup {
       --  So, we create new capabilities with nvim cmp, and then broadcast that to the servers.
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
+      local util = require 'lspconfig.util'
 
       -- Enable the following language servers
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
@@ -496,7 +497,14 @@ require('lazy').setup {
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`tsserver`) will work just fine
-        -- tsserver = {},
+        biome = {
+          root_dir = function(fname)
+            return util.root_pattern('biome.json', 'biome.jsonc')(fname)
+              or util.find_package_json_ancestor(fname)
+              or util.find_node_modules_ancestor(fname)
+              or util.find_git_ancestor(fname)
+          end,
+        },
         --
 
         lua_ls = {
@@ -843,7 +851,7 @@ require('lazy').setup {
 
       ---@diagnostic disable-next-line: missing-fields
       require('nvim-treesitter.configs').setup {
-        ensure_installed = { 'bash', 'c', 'html', 'lua', 'markdown', 'vim', 'vimdoc' },
+        ensure_installed = { 'bash', 'c', 'html', 'lua', 'markdown', 'vim', 'vimdoc', 'vue', 'javascript', 'typescript', 'scss', 'css' },
         -- Autoinstall languages that are not installed
         auto_install = true,
         highlight = { enable = true },
