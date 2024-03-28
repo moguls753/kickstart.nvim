@@ -1,3 +1,6 @@
+-- nodejs path for volar, since asdf project version are not compatible
+vim.env.PATH = '/home/local/PDC01/era/.asdf/installs/nodejs/21.7.1/bin:' .. vim.env.PATH
+
 -- Set <space> as the leader key
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
@@ -469,13 +472,22 @@ require('lazy').setup {
         end,
       })
 
+      -- Ensure the servers and tools above are installed
+      --  To check the current status of installed tools and/or manually install
+      --  other tools, you can run
+      --    :Mason
+      --
+      --  You can press `g?` for help in this menu
+      require('mason').setup()
+
       -- LSP servers and clients are able to communicate to each other what features they support.
       --  By default, Neovim doesn't support everything that is in the LSP Specification.
       --  When you add nvim-cmp, luasnip, etc. Neovim now has *more* capabilities.
       --  So, we create new capabilities with nvim cmp, and then broadcast that to the servers.
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
-      local util = require 'lspconfig.util'
+      local mason_registry = require 'mason-registry'
+      local vue_language_server_path = mason_registry.get_package('vue-language-server'):get_install_path() .. '/node_modules/@vue/language-server'
 
       -- Enable the following language servers
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
@@ -497,15 +509,27 @@ require('lazy').setup {
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`tsserver`) will work just fine
-        biome = {
-          root_dir = function(fname)
-            return util.root_pattern('biome.json', 'biome.jsonc')(fname)
-              or util.find_package_json_ancestor(fname)
-              or util.find_node_modules_ancestor(fname)
-              or util.find_git_ancestor(fname)
-          end,
+
+        tsserver = {
+          init_options = {
+            plugins = {
+              {
+                name = '@vue/typescript-plugin',
+                location = vue_language_server_path,
+                languages = { 'vue' },
+              },
+            },
+          },
+          filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
         },
-        --
+
+        volar = {
+          -- init_options = {
+          --   typescript = {
+          --     tsdk = vim.fn.getcwd() .. 'node_modules/typescript',
+          --   },
+          -- },
+        },
 
         lua_ls = {
           -- cmd = {...},
@@ -538,14 +562,6 @@ require('lazy').setup {
           cmd = { 'bundle', 'exec', 'solargraph', 'stdio' },
         },
       }
-
-      -- Ensure the servers and tools above are installed
-      --  To check the current status of installed tools and/or manually install
-      --  other tools, you can run
-      --    :Mason
-      --
-      --  You can press `g?` for help in this menu
-      require('mason').setup()
 
       -- You can add other tools here that you want Mason to install
       -- for you, so that they are available from within Neovim.
@@ -765,7 +781,7 @@ require('lazy').setup {
     event = 'InsertEnter',
     config = function()
       require('copilot').setup {
-        copilot_node_command = 'node',
+        copilot_node_command = '/home/local/PDC01/era/.asdf/installs/nodejs/21.7.1/bin/node',
         suggestion = { enabled = false },
         panel = { enabled = false },
       }
@@ -851,7 +867,7 @@ require('lazy').setup {
 
       ---@diagnostic disable-next-line: missing-fields
       require('nvim-treesitter.configs').setup {
-        ensure_installed = { 'bash', 'c', 'html', 'lua', 'markdown', 'vim', 'vimdoc', 'vue', 'javascript', 'typescript', 'scss', 'css' },
+        ensure_installed = { 'bash', 'c', 'html', 'lua', 'markdown', 'vim', 'vimdoc', 'vue', 'javascript', 'typescript', 'scss', 'css', 'pug' },
         -- Autoinstall languages that are not installed
         auto_install = true,
         highlight = { enable = true },
