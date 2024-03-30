@@ -784,7 +784,7 @@ require('lazy').setup {
     event = 'InsertEnter',
     config = function()
       require('copilot').setup {
-        copilot_node_command = '/home/local/PDC01/era/.asdf/installs/nodejs/21.7.1/bin/node',
+        copilot_node_command = 'node', -- this is the version in the PATH prepended earlier
         suggestion = { enabled = false },
         panel = { enabled = false },
       }
