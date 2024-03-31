@@ -26,12 +26,12 @@ local function create_snippet_label_with_params(base_label, params)
     return base_label
   end
 
-  local label = base_label .. '(${1:' .. params[1]
+  local label = base_label .. '(${1:' .. params[1] .. '}'
 
   for i = 2, #params do
     label = label .. ', ${' .. i .. ':' .. params[i] .. '}'
   end
-  return label .. '})'
+  return label .. ')'
 end
 
 local function start_watching_routes()
