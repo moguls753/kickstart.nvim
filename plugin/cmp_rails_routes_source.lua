@@ -4,14 +4,35 @@ local script_path = vim.fn.stdpath 'config' .. '/scripts/rails_routes_to_json.rb
 local items = {}
 local w = vim.loop.new_fs_event()
 
--- local function show_in_split(data)
---   vim.schedule(function()
---     -- Erzeugt einen neuen horizontalen Split
---     vim.cmd 'new'
---     -- Setzt den Inhalt des aktuellen Puffers auf die inspizierte Daten
---     vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(vim.inspect(data), '\n'))
---   end)
--- end
+local function create_text_label_with_params(base_label, params)
+  if #params == 0 then
+    return base_label
+  end
+
+  local label = base_label .. '('
+
+  for i, param in ipairs(params) do
+    label = label .. ':' .. param
+    if i < #params then
+      label = label .. ', '
+    end
+  end
+
+  return label .. ')'
+end
+
+local function create_snippet_label_with_params(base_label, params)
+  if #params == 0 then
+    return base_label
+  end
+
+  local label = base_label .. '(${1:' .. params[1]
+
+  for i = 2, #params do
+    label = label .. ', ${' .. i .. ':' .. params[i] .. '}'
+  end
+  return label .. '})'
+end
 
 local function start_watching_routes()
   if w then
@@ -27,39 +48,32 @@ local function start_watching_routes()
       return
     end
 
-    -- Do work...
     Job:new({
       command = 'bundle',
       args = { 'exec', 'ruby', script_path },
-      -- on_stdout = function(_, data)
-      --   -- Plant das Schreiben der stdout-Daten in die Logdatei
-      --   vim.schedule(function()
-      --     vim.fn.writefile({ data }, log_path, 'a')
-      --   end)
-      -- end,
-      -- on_stderr = function(_, data)
-      --   -- Plant das Schreiben der stderr-Daten in die Logdatei
-      --   vim.schedule(function()
-      --     vim.fn.writefile({ data }, log_path, 'a')
-      --   end)
-      -- end,
       on_exit = function(j, return_val)
         if return_val == 0 then
           local ok, routes = pcall(vim.json.decode, table.concat(j:result(), '\n'))
           if ok then
-            -- Umwandeln der `routes` in das erwartete Format
             items = {}
             for _, route in ipairs(routes) do
+              local url_menu_label = create_text_label_with_params(string.format('%s_url', route.route), route.required_parts)
+              local url_insert_text = create_snippet_label_with_params(string.format('%s_url', route.route), route.required_parts)
               table.insert(items, {
-                label = string.format('%s_path', route.route),
+                label = url_menu_label,
                 kind = vim.lsp.protocol.CompletionItemKind.Method,
+                insertText = url_insert_text,
+                insertTextFormat = vim.lsp.protocol.InsertTextFormat.Snippet,
               })
+              local path_menu_label = create_text_label_with_params(string.format('%s_path', route.route), route.required_parts)
+              local path_insert_text = create_snippet_label_with_params(string.format('%s_path', route.route), route.required_parts)
               table.insert(items, {
-                label = string.format('%s_url', route.route),
+                label = path_menu_label,
                 kind = vim.lsp.protocol.CompletionItemKind.Method,
+                insertText = path_insert_text,
+                insertTextFormat = vim.lsp.protocol.InsertTextFormat.Snippet,
               })
             end
-            -- show_in_split(items)
           else
             print 'Fehler beim Decodieren der JSON-Ausgabe'
           end

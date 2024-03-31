@@ -7,7 +7,8 @@ routes = Rails.application.routes.routes.map do |route|
   next unless route.name
 
   {
-    route: route.name
+    route: route.name,
+    required_parts: route.required_parts
   }
 end.compact
 
