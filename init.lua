@@ -511,8 +511,6 @@ require('lazy').setup {
         --
         -- But for many setups, the LSP (`tsserver`) will work just fine
 
-        vuels = {},
-
         tsserver = {
           init_options = {
             plugins = {
