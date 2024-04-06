@@ -1,5 +1,5 @@
--- nodejs path for volar, since asdf project version are not compatible
-vim.env.PATH = '/home/local/PDC01/era/.asdf/installs/nodejs/21.7.1/bin:' .. vim.env.PATH
+-- nodejs path for copilot, since asdf project version are not compatible
+vim.env.PATH = '/home/era/.asdf/installs/nodejs/21.7.2/bin:' .. vim.env.PATH
 
 -- Set <space> as the leader key
 -- See `:help mapleader`
