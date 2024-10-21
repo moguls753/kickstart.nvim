@@ -1,6 +1,5 @@
 -- nodejs path for volar, since asdf project version are not compatible
-vim.env.PATH = '/home/local/PDC01/era/.asdf/installs/nodejs/21.7.1/bin:' .. vim.env.PATH
-
+vim.env.PATH = '/home/eike/.local/share/mise/installs/node/21/bin:' .. vim.env.PATH
 -- Set <space> as the leader key
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
@@ -28,6 +27,28 @@ vim.opt.showmode = false
 --  Remove this option if you want your OS clipboard to remain independent.
 --  See `:help 'clipboard'`
 vim.opt.clipboard = 'unnamedplus'
+
+local function paste()
+  return {
+    vim.fn.split(vim.fn.getreg '', '\n'),
+    vim.fn.getregtype '',
+  }
+end
+
+if os.getenv 'SSH_TTY' ~= nil then
+  vim.g.clipboard = {
+    name = 'OSC 52',
+    copy = {
+      ['+'] = require('vim.ui.clipboard.osc52').copy '+',
+      ['*'] = require('vim.ui.clipboard.osc52').copy '*',
+    },
+
+    paste = {
+      ['+'] = paste,
+      ['*'] = paste,
+    },
+  }
+end
 
 -- Enable break indent
 vim.opt.breakindent = true
@@ -69,9 +90,7 @@ vim.opt.scrolloff = 10
 
 -- mapping jk to <esc>
 vim.keymap.set('i', 'jk', '<esc>', { desc = "Using 'jk' as escape key", noremap = true, silent = true })
-
--- mapping to open netrw
-vim.keymap.set('n', '<leader>e', '<cmd>Explore<cr>', { desc = 'Open the nvim file explorer netrw', noremap = true, silent = true })
+vim.keymap.set('t', 'jk', [[<C-\><C-n>]], { desc = "Using 'jk' as escape key in terminal", noremap = true, silent = true })
 
 -- Set highlight on search, but clear on pressing <Esc> in normal mode
 vim.opt.hlsearch = true
@@ -212,6 +231,84 @@ require('lazy').setup {
     'slim-template/vim-slim',
   },
 
+  {
+    'theprimeagen/vim-be-good',
+  },
+
+  {
+    'stevearc/oil.nvim',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    config = function()
+      require('oil').setup {
+        view_options = {
+          show_hidden = true,
+        },
+        vim.keymap.set('n', '<leader>e', '<CMD>Oil<CR>', { desc = 'Open parent directory' }),
+      }
+    end,
+  },
+
+  {
+    'mfussenegger/nvim-dap',
+    event = 'VeryLazy',
+    dependencies = {
+      'rcarriga/nvim-dap-ui',
+      'williamboman/mason.nvim',
+      'nvim-neotest/nvim-nio',
+    },
+    config = function()
+      local dap = require 'dap'
+      local ui = require 'dapui'
+      ui.setup()
+      dap.listeners.before.attach.dapui_config = function()
+        ui.open()
+      end
+      dap.listeners.before.launch.dapui_config = function()
+        ui.open()
+      end
+      dap.listeners.before.event_terminated.dapui_config = function()
+        ui.close()
+      end
+      dap.listeners.before.event_exited.dapui_config = function()
+        ui.close()
+      end
+
+      -- Konfiguration des Adapters für codelldb
+      dap.adapters.codelldb = {
+        type = 'server',
+        port = '${port}',
+        executable = {
+          command = vim.fn.stdpath 'data' .. '/mason/bin/codelldb',
+          args = { '--port', '${port}' },
+        },
+      }
+
+      -- Konfiguration für C++ (gilt auch für C)
+      dap.configurations.cpp = {
+        {
+          name = 'Launch file',
+          type = 'codelldb',
+          request = 'launch',
+          program = function()
+            return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+          end,
+          cwd = '${workspaceFolder}',
+          stopOnEntry = false,
+          args = {},
+        },
+      }
+
+      vim.keymap.set('n', '<space>b', dap.toggle_breakpoint)
+      vim.keymap.set('n', '<space>?', function()
+        ui.eval(nil, { enter = true })
+      end)
+      vim.keymap.set('n', '<F5>', dap.continue)
+
+      -- Optional: Diese Zeile ermöglicht dieselbe Konfiguration auch für C-Dateien
+      dap.configurations.c = dap.configurations.cpp
+    end,
+  },
+
   -- NOTE: Plugins can also be configured to run lua code when they are loaded.
   --
   -- This is often very useful to both group configuration, as well as handle
@@ -234,12 +331,17 @@ require('lazy').setup {
       require('which-key').setup()
 
       -- Document existing key chains
-      require('which-key').register {
-        ['<leader>c'] = { name = '[C]ode', _ = 'which_key_ignore' },
-        ['<leader>d'] = { name = '[D]ocument', _ = 'which_key_ignore' },
-        ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
-        ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
-        ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
+      require('which-key').add {
+        { '<leader>c', group = '[C]ode' },
+        { '<leader>c_', hidden = true },
+        { '<leader>d', group = '[D]ocument' },
+        { '<leader>d_', hidden = true },
+        { '<leader>r', group = '[R]ename' },
+        { '<leader>r_', hidden = true },
+        { '<leader>s', group = '[S]earch' },
+        { '<leader>s_', hidden = true },
+        { '<leader>w', group = '[W]orkspace' },
+        { '<leader>w_', hidden = true },
       }
     end,
   },
@@ -275,7 +377,7 @@ require('lazy').setup {
       -- Useful for getting pretty icons, but requires special font.
       --  If you already have a Nerd Font, or terminal set up with fallback fonts
       --  you can enable this
-      -- { 'nvim-tree/nvim-web-devicons' }
+      { 'nvim-tree/nvim-web-devicons' },
     },
     config = function()
       -- Telescope is a fuzzy finder that comes with a lot of different things that
@@ -490,6 +592,8 @@ require('lazy').setup {
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
 
+      -- Set the offset_encoding in capabilities
+      capabilities.offsetEncoding = { 'utf-16' }
       -- Enable the following language servers
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
       --
@@ -510,20 +614,26 @@ require('lazy').setup {
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`tsserver`) will work just fine
-
-        vuels = {},
-
-        tsserver = {
-          init_options = {
-            plugins = {
-              {
-                name = '@vue/typescript-plugin',
-                location = '.node_modules/@vue/typescript-plugin',
-                languages = { 'vue' },
-              },
-            },
+        clangd = {
+          capabilities = capabilities,
+          filetypes = { 'c', 'cpp', 'objc', 'objcpp', 'h', 'tpp' },
+          cmd = {
+            'clangd',
+            '--fallback-style=LLVM',
           },
-          filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+        },
+
+        ts_ls = {
+          init_options = {
+            -- plugins = {
+            --   {
+            --     name = '@vue/typescript-plugin',
+            --     location = 'node_modules/@vue/typescript-plugin',
+            --     languages = { 'vue' },
+            --   },
+            -- },
+          },
+          filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact' },
         },
 
         volar = {
@@ -564,6 +674,41 @@ require('lazy').setup {
         solargraph = {
           cmd = { 'bundle', 'exec', 'solargraph', 'stdio' },
         },
+
+        texlab = {
+          settings = {
+            texlab = {
+              auxDirectory = '.',
+              bibtexFormatter = 'texlab',
+              build = {
+                args = { '--interaction=nonstopmode', '--synctex=1', '%f' },
+                executable = 'lualatex',
+                forwardSearchAfter = false,
+                onSave = true,
+              },
+              chktex = {
+                onEdit = false,
+                onOpenAndSave = false,
+              },
+              diagnosticsDelay = 300,
+              formatterLineLength = 80,
+              forwardSearch = {
+                executable = 'zathura',
+                args = {
+                  '--synctex-editor-command',
+                  [[nvim-texlabconfig -file '%{input}' -line %{line}]],
+                  '--synctex-forward',
+                  '%l:1:%f',
+                  '%p',
+                },
+              },
+              latexFormatter = 'latexindent',
+              latexindent = {
+                modifyLineBreaks = false,
+              },
+            },
+          },
+        },
       }
 
       -- You can add other tools here that you want Mason to install
@@ -571,6 +716,8 @@ require('lazy').setup {
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format lua code
+        'clangd',
+        'codelldb', -- Used for debugging C/C++ code
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -896,6 +1043,10 @@ require('lazy').setup {
           'scss',
           'css',
           'pug',
+          'latex',
+          'ruby',
+          'git_rebase',
+          'cpp',
         },
         -- Autoinstall languages that are not installed
         auto_install = true,
