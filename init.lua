@@ -1,5 +1,5 @@
 -- nodejs path for volar, since asdf project version are not compatible
-vim.env.PATH = '/home/eike/.local/share/mise/installs/node/21/bin:' .. vim.env.PATH
+vim.env.PATH = '/home/eike/.local/share/mise/installs/node/23/bin:' .. vim.env.PATH
 -- Set <space> as the leader key
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
@@ -623,18 +623,18 @@ require('lazy').setup {
           },
         },
 
-        ts_ls = {
-          init_options = {
-            -- plugins = {
-            --   {
-            --     name = '@vue/typescript-plugin',
-            --     location = 'node_modules/@vue/typescript-plugin',
-            --     languages = { 'vue' },
-            --   },
-            -- },
-          },
-          filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact' },
-        },
+        -- ts_ls = {
+        --   init_options = {
+        --     -- plugins = {
+        --     --   {
+        --     --     name = '@vue/typescript-plugin',
+        --     --     location = 'node_modules/@vue/typescript-plugin',
+        --     --     languages = { 'vue' },
+        --     --   },
+        --     -- },
+        --   },
+        --   filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact' },
+        -- },
 
         volar = {
           -- init_options = {
@@ -669,10 +669,6 @@ require('lazy').setup {
               -- diagnostics = { disable = { 'missing-fields' } },
             },
           },
-        },
-
-        solargraph = {
-          cmd = { 'bundle', 'exec', 'solargraph', 'stdio' },
         },
 
         texlab = {
